@@ -1,3 +1,7 @@
+<div align="right">
+  <a href="README.md">中文</a> | <strong>English</strong>
+</div>
+
 <div align="center">
 
 # Knowledge Base Q&A System
@@ -10,7 +14,6 @@
 [![FAISS](https://img.shields.io/badge/FAISS-Meta-blue)](https://github.com/facebookresearch/faiss)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Built with Claude](https://img.shields.io/badge/Built%20with-Claude%20AI-a855f7?logo=anthropic&logoColor=white)](https://anthropic.com)
-[![README 中文](https://img.shields.io/badge/README-中文-red)](README.md)
 
 </div>
 
@@ -512,6 +515,6 @@ This project is open-sourced under the [MIT License](LICENSE) — free for learn
 
 If this project helped you, please consider giving it a ⭐ Star
 
-[中文 README](README.md) · [Teaching Docs](lessons/README.md) · [Open an Issue](../../issues)
+[Teaching Docs](lessons/README.md) · [Open an Issue](../../issues)
 
 </div>

@@ -1,3 +1,7 @@
+<div align="right">
+  <strong>中文</strong> | <a href="README_EN.md">English</a>
+</div>
+
 <div align="center">
 
 # 知识库智能问答系统
@@ -10,7 +14,6 @@
 [![FAISS](https://img.shields.io/badge/FAISS-Meta-blue)](https://github.com/facebookresearch/faiss)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Built with Claude](https://img.shields.io/badge/Built%20with-Claude%20AI-a855f7?logo=anthropic&logoColor=white)](https://anthropic.com)
-[![README EN](https://img.shields.io/badge/README-English-blue)](README_EN.md)
 
 </div>
 
@@ -508,6 +511,6 @@ pip install rank_bm25
 
 如果本项目对你有帮助，欢迎点个 ⭐ Star
 
-[English README](README_EN.md) · [教学文档](lessons/README.md) · [提交 Issue](../../issues)
+[教学文档](lessons/README.md) · [提交 Issue](../../issues)
 
 </div>
