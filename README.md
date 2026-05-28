@@ -494,14 +494,7 @@ pip install rank_bm25
 
 ## AI 协作声明
 
-本项目由人类开发者与 **Claude AI**（Anthropic）协作完成，包括：
-
-- **系统架构与核心代码**：开发者主导设计，Claude AI 参与代码实现与调试
-- **19 篇教学文档**：基于开发者的实战经验与知识点梳理，由 Claude AI 辅助撰写与结构化
-- **README 与项目文档**：开发者提供内容框架与素材，Claude AI 参与文字组织与排版
-
-这是一次真实的人机协作实践——所有技术决策、踩坑经历和领域知识来自开发者，  
-AI 负责把这些经验转化为结构清晰、便于学习的文档与代码。
+本项目由 [lanqingsong874953727@outlook.com](mailto:lanqingsong874953727@outlook.com) 与 AI 助手协作开发。
 
 ---
 

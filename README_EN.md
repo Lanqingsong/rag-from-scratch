@@ -498,13 +498,7 @@ Replace documents in `knowledge_base/` → edit `system.txt` role definition →
 
 ## AI Collaboration Statement
 
-This project was built collaboratively by a human developer and **Claude AI** (Anthropic):
-
-- **System architecture and core code** — developer-led design; Claude AI assisted with implementation and debugging
-- **19 teaching documents** — based on the developer's real engineering experience; Claude AI assisted with writing and structuring
-- **README and project docs** — developer provided content framework and source material; Claude AI assisted with writing and layout
-
-This is a real human-AI collaboration in practice — all technical decisions, lessons learned, and domain knowledge come from the developer; AI helped transform that experience into clearly structured, learnable documentation and code.
+This project was co-developed by [lanqingsong874953727@outlook.com](mailto:lanqingsong874953727@outlook.com) and an AI assistant.
 
 ---
 
