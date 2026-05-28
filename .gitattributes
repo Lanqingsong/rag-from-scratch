@@ -1,0 +1,11 @@
+# Normalize line endings to LF in the repository
+* text=auto eol=lf
+
+# Force binary files to not be touched
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.faiss binary

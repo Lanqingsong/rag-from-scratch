@@ -1,0 +1,8 @@
+{
+  "name": "默认知识库",
+  "description": "机器视觉相关文档，按 ### 三级标题切割",
+  "strategy": "markdown",
+  "heading_level": 3,
+  "chunk_size": 1000,
+  "chunk_overlap": 0
+}

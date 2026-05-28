@@ -1,0 +1,12 @@
+{
+  "system_vars": {
+    "domain": "机器视觉",
+    "role": "资深工程师AI助手",
+    "answer_style": "系统、深入、有结构"
+  },
+  "user_vars": {
+    "response_language": "中文",
+    "detail_level": "expert"
+  },
+  "description": "system_vars: 领域/角色等固定参数，影响模型定位。user_vars: 回答风格等用户偏好参数。在 system.txt 中用 {{variable_name}} 引用。"
+}

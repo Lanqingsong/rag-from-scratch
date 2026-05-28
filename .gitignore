@@ -1,0 +1,63 @@
+# 敏感配置（绝不提交）
+.env
+model_config.json
+
+# 向量库（体积大，自动生成）
+vector_store/
+
+# Conda 环境（体积极大）
+.conda/
+.conda_env
+
+# 知识库中的版权文档（替换为你自己的文档）
+knowledge_base/*.pdf
+knowledge_base/*.md
+# 保留目录本身和配置文件
+!knowledge_base/.gitkeep
+!knowledge_base/kb_config.json
+
+# SearXNG 配置（含本地路径信息）
+settings.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 虚拟环境
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 日志
+*.log
+logs/
+
+# 提示词历史版本（本地存档，不必入仓）
+prompt_templates/versions/
+
+# Claude Code 内部记忆文件
+.claude/
+
+# 根目录下的私有知识文档
+*.pdf
+操作手册.md
+机器视觉第一部分.md

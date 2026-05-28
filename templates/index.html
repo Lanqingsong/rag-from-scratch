@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库问答系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: #edf0f4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 24px;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
+            z-index: 10;
+            position: relative;
+        }
+        .header h1 { font-size: 21px; font-weight: 600; }
+        .header .subtitle { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+        .new-chat-btn {
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4);
+            color: white; border-radius: 20px; padding: 6px 14px;
+            font-size: 13px; cursor: pointer; transition: background 0.2s;
+        }
+        .new-chat-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 14px;
+            animation: fadeIn 0.35s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user { flex-direction: row-reverse; }
+
+        .message .avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px; flex-shrink: 0;
+        }
+        .message.assistant .avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .message.user .avatar { background: #52c41a; color: white; }
+
+        .message .bubble {
+            max-width: 88%;
+            padding: 18px 22px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.75;
+            overflow-x: auto;
+        }
+        .message.assistant .bubble {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-top-left-radius: 4px;
+        }
+        .message.user .bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+        .message.user .bubble * { color: white !important; }
+
+        /* ========== Markdown 渲染样式 ========== */
+        .markdown-body { word-break: break-word; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+            margin: 16px 0 10px 0;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        .markdown-body h1 { font-size: 1.5em; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .markdown-body h2 { font-size: 1.3em; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+        .markdown-body h3 { font-size: 1.15em; }
+        .markdown-body h4 { font-size: 1.05em; color: #555; }
+        .markdown-body p { margin: 8px 0; }
+        .markdown-body ul, .markdown-body ol { padding-left: 24px; margin: 8px 0; }
+        .markdown-body li { margin: 4px 0; }
+        .markdown-body li::marker { color: #667eea; }
+
+        .markdown-body code {
+            background: #f0f2f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Fira Code", "Consolas", monospace;
+            font-size: 0.9em;
+            color: #e83e8c;
+        }
+        .markdown-body pre {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 16px 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: 13px;
+        }
+
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #d0d5dd;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        .markdown-body th {
+            background: #f0f2f5;
+            font-weight: 600;
+            color: #333;
+        }
+        .markdown-body tr:nth-child(even) { background: #fafbfc; }
+
+        .markdown-body blockquote {
+            border-left: 4px solid #667eea;
+            margin: 12px 0;
+            padding: 8px 16px;
+            background: #f6f8ff;
+            color: #555;
+            border-radius: 0 6px 6px 0;
+        }
+        .markdown-body strong { font-weight: 600; color: #333; }
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid #e8e8e8;
+            margin: 16px 0;
+        }
+        .markdown-body a { color: #667eea; text-decoration: none; }
+        .markdown-body a:hover { text-decoration: underline; }
+
+        /* KaTeX 公式 */
+        .katex-display { margin: 14px 0; overflow-x: auto; padding: 4px 0; }
+        .katex { font-size: 1.08em; }
+
+        /* 服务端预渲染的公式（KaTeX增强前的fallback样式） */
+        .math-inline {
+            font-family: "KaTeX_Main", "Times New Roman", serif;
+            font-style: italic;
+            background: rgba(102, 126, 234, 0.06);
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #333;
+        }
+        .math-block {
+            display: block;
+            text-align: center;
+            margin: 16px 0;
+            padding: 14px 10px;
+            background: rgba(102, 126, 234, 0.04);
+            border-left: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 0 6px 6px 0;
+            font-family: "KaTeX_Main", "Times New Roman", serif;
+            font-style: italic;
+            font-size: 1.05em;
+            color: #333;
+            overflow-x: auto;
+        }
+        /* Python markdown 代码块 */
+        .codehilite {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 16px 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+            line-height: 1.6;
+            font-size: 13px;
+            font-family: "Fira Code", "Consolas", monospace;
+        }
+        .codehilite pre { margin: 0; }
+
+        /* ========== 参考资料 ========== */
+        .references {
+            margin-top: 12px;
+            border-top: 1px solid #e8e8e8;
+            padding-top: 10px;
+        }
+        .references > summary {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 500;
+            user-select: none;
+            padding: 4px 0;
+        }
+        .references > summary:hover { color: #764ba2; }
+
+        .ref-item {
+            background: #f8f9fb;
+            border: 1px solid #eef0f4;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .ref-item .ref-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .ref-item .ref-content {
+            color: #444;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* 互联网搜索结果 */
+        .references.web-refs > summary { color: #059669; }
+        .references.web-refs > summary:hover { color: #047857; }
+        .web-ref-item {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .web-ref-item .ref-title a {
+            color: #059669;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .web-ref-item .ref-title a:hover { text-decoration: underline; }
+        .web-ref-item .ref-content {
+            color: #444;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 6px;
+        }
+
+        /* ========== 输入区域 ========== */
+        .input-area {
+            background: white;
+            border-top: 1px solid #eef0f4;
+            padding: 16px 20px;
+            flex-shrink: 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+        }
+        .input-wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .input-wrapper textarea {
+            flex: 1;
+            border: 2px solid #e4e7ec;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            min-height: 48px;
+            max-height: 150px;
+            line-height: 1.6;
+            transition: border-color 0.2s;
+        }
+        .input-wrapper textarea:focus { border-color: #667eea; }
+
+        .input-wrapper button {
+            width: 48px; height: 48px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            flex-shrink: 0;
+            transition: transform 0.15s, opacity 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
+        }
+        .input-wrapper button:hover { transform: scale(1.06); box-shadow: 0 4px 16px rgba(102,126,234,0.4); }
+        .input-wrapper button:active { transform: scale(0.94); }
+        .input-wrapper button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        /* 流式输出中间态 */
+        .streaming-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        /* ========== 打字动画 ========== */
+        .typing-dots { display: flex; gap: 5px; padding: 6px 0; }
+        .typing-dots span {
+            width: 9px; height: 9px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+            40% { transform: translateY(-10px); opacity: 1; }
+        }
+
+        /* ========== 欢迎页 ========== */
+        .welcome-tips { text-align: center; color: #999; margin-top: 60px; }
+        .welcome-tips .welcome-icon { font-size: 56px; margin-bottom: 16px; }
+        .welcome-tips h2 { color: #555; font-weight: 500; margin-bottom: 6px; font-size: 22px; }
+        .welcome-tips .doc-info { font-size: 13px; color: #bbb; margin-bottom: 24px; }
+        .welcome-tips .tips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .welcome-tips .tip {
+            background: white;
+            border: 1px solid #e4e7ec;
+            border-radius: 20px;
+            padding: 10px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #555;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .welcome-tips .tip:hover {
+            border-color: #667eea;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+            transform: translateY(-1px);
+        }
+
+        .status-bar {
+            text-align: center;
+            color: #bbb;
+            font-size: 11px;
+            padding: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .server-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #d0d0d0;
+            flex-shrink: 0;
+            transition: background 0.4s;
+        }
+        .server-dot.online  { background: #22c55e; }
+        .server-dot.offline { background: #ef4444; }
+
+        /* ========== 设置面板 ========== */
+        .header-left {
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+            display: flex; gap: 8px;
+        }
+        .header-btn {
+            background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4);
+            color: white; border-radius: 20px; padding: 6px 14px;
+            font-size: 13px; cursor: pointer; transition: background 0.2s; white-space: nowrap;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .settings-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.35); z-index: 100;
+        }
+        .settings-overlay.open { display: block; }
+
+        .settings-panel {
+            position: fixed; top: 0; right: -420px; width: 420px; height: 100vh;
+            background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+            z-index: 101; display: flex; flex-direction: column;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+        .settings-panel.open { right: 0; }
+
+        .settings-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #eef0f4;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .settings-header h2 { font-size: 16px; font-weight: 600; color: #333; }
+        .settings-close {
+            background: none; border: none; font-size: 20px; cursor: pointer;
+            color: #999; padding: 4px; line-height: 1;
+        }
+        .settings-close:hover { color: #333; }
+
+        .settings-body { padding: 20px 24px; flex: 1; }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        .settings-section label {
+            display: block; font-size: 13px; font-weight: 500;
+            color: #555; margin-bottom: 6px;
+        }
+        .settings-section .hint {
+            font-size: 11px; color: #aaa; margin-top: 4px;
+        }
+
+        .settings-section select,
+        .settings-section input[type="text"],
+        .settings-section input[type="password"] {
+            width: 100%; padding: 9px 12px;
+            border: 1.5px solid #e4e7ec; border-radius: 8px;
+            font-size: 14px; font-family: inherit; outline: none;
+            transition: border-color 0.2s; background: #fafbfc;
+            box-sizing: border-box;
+        }
+        .settings-section select:focus,
+        .settings-section input:focus { border-color: #667eea; background: white; }
+
+        .key-wrapper { position: relative; }
+        .key-wrapper input { padding-right: 40px; }
+        .key-eye {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: #aaa; font-size: 15px;
+        }
+        .key-eye:hover { color: #667eea; }
+
+        .model-row { display: flex; gap: 8px; }
+        .model-row select { flex: 1; }
+        .model-row input { flex: 1; }
+
+        .slider-row { display: flex; align-items: center; gap: 10px; }
+        .slider-row input[type="range"] { flex: 1; accent-color: #667eea; }
+        .slider-val {
+            min-width: 36px; text-align: center; font-size: 13px;
+            font-weight: 600; color: #667eea;
+        }
+
+        .settings-footer {
+            padding: 16px 24px 24px;
+            border-top: 1px solid #eef0f4;
+            display: flex; gap: 10px; flex-shrink: 0;
+        }
+        .btn-test {
+            flex: 1; padding: 10px; border-radius: 8px;
+            border: 1.5px solid #667eea; background: white;
+            color: #667eea; font-size: 14px; cursor: pointer;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .btn-test:hover { background: #f0f2ff; }
+        .btn-save {
+            flex: 1; padding: 10px; border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; font-size: 14px; cursor: pointer;
+            transition: opacity 0.2s; font-family: inherit;
+        }
+        .btn-save:hover { opacity: 0.88; }
+        .btn-test:disabled, .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .test-result {
+            margin: 0 24px 12px;
+            padding: 10px 14px; border-radius: 8px;
+            font-size: 13px; line-height: 1.5;
+            display: none;
+        }
+        .test-result.ok  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .test-result.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* ========== 知识库管理面板 ========== */
+        .kb-panel {
+            position: fixed; top: 0; left: -460px; width: 460px; height: 100vh;
+            background: white; box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+            z-index: 101; display: flex; flex-direction: column;
+            transition: left 0.3s ease;
+        }
+        .kb-panel.open { left: 0; }
+
+        .kb-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #eef0f4;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .kb-header h2 { font-size: 16px; font-weight: 600; color: #333; }
+
+        .kb-body { flex: 1; overflow-y: auto; padding: 16px 24px; }
+
+        .kb-stats {
+            background: #f6f8ff; border-radius: 10px; padding: 12px 16px;
+            margin-bottom: 16px; font-size: 13px; color: #667eea; font-weight: 500;
+        }
+
+        .upload-zone {
+            border: 2px dashed #d0d5e8; border-radius: 12px;
+            padding: 20px; text-align: center; cursor: pointer;
+            margin-bottom: 16px; transition: all 0.2s; color: #999; font-size: 14px;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: #667eea; background: #f6f8ff; color: #667eea;
+        }
+        .upload-zone .upload-icon { font-size: 28px; margin-bottom: 6px; }
+        .upload-zone input[type="file"] { display: none; }
+
+        .file-list { display: flex; flex-direction: column; gap: 8px; }
+        .file-item {
+            display: flex; align-items: center; gap: 10px;
+            background: #fafbfc; border: 1px solid #eef0f4;
+            border-radius: 10px; padding: 10px 14px;
+            transition: background 0.15s;
+        }
+        .file-item:hover { background: #f0f2ff; }
+        .file-icon { font-size: 20px; flex-shrink: 0; }
+        .file-info { flex: 1; min-width: 0; }
+        .file-name { font-size: 13px; font-weight: 500; color: #333; word-break: break-all; }
+        .file-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+        .file-del {
+            background: none; border: none; color: #ddd; cursor: pointer;
+            font-size: 16px; padding: 4px; flex-shrink: 0;
+            border-radius: 6px; transition: all 0.15s;
+        }
+        .file-del:hover { color: #ef4444; background: #fef2f2; }
+
+        .kb-footer {
+            padding: 14px 24px 20px; border-top: 1px solid #eef0f4; flex-shrink: 0;
+        }
+        .btn-rebuild {
+            width: 100%; padding: 11px; border-radius: 10px; border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; font-size: 14px; cursor: pointer; font-family: inherit;
+            transition: opacity 0.2s;
+        }
+        .btn-rebuild:hover { opacity: 0.88; }
+        .btn-rebuild:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .rebuild-status {
+            text-align: center; font-size: 12px; margin-top: 8px;
+            color: #888; min-height: 18px;
+        }
+        .rebuild-status.ok  { color: #16a34a; }
+        .rebuild-status.err { color: #dc2626; }
+        .rebuild-status.run { color: #667eea; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <button class="header-btn" onclick="openSettings()" title="配置模型">&#9881; 模型配置</button>
+            <button class="header-btn" onclick="openKbPanel()" title="管理知识库文档">&#x1F4DA; 知识库</button>
+        </div>
+        <h1>知识库问答系统</h1>
+        <div class="subtitle" id="headerSubtitle">基于 RAG 检索增强生成</div>
+        <button class="new-chat-btn" onclick="newChat()" title="清空对话记录，开始新会话">+ 新对话</button>
+    </div>
+
+    <!-- 公共遮罩 -->
+    <div class="settings-overlay" id="settingsOverlay" onclick="closePanels()"></div>
+
+    <!-- 知识库管理面板 -->
+    <div class="kb-panel" id="kbPanel">
+        <div class="kb-header">
+            <h2>&#x1F4DA; 知识库管理</h2>
+            <button class="settings-close" onclick="closeKbPanel()">&#10005;</button>
+        </div>
+        <div class="kb-body">
+            <div class="kb-stats" id="kbStats">加载中...</div>
+
+            <div class="upload-zone" id="uploadZone"
+                 onclick="document.getElementById('fileInput').click()"
+                 ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+                <div class="upload-icon">&#x1F4C2;</div>
+                <div>点击上传 或 拖拽文件到此处</div>
+                <div style="font-size:12px;margin-top:4px;color:#bbb">支持 .txt &nbsp;.md &nbsp;.pdf</div>
+                <input type="file" id="fileInput" multiple accept=".txt,.md,.pdf"
+                       onchange="uploadFiles(this.files)">
+            </div>
+
+            <div class="file-list" id="fileList">
+                <div style="text-align:center;color:#ccc;padding:20px">加载中...</div>
+            </div>
+        </div>
+        <div class="kb-footer">
+            <button class="btn-rebuild" id="btnRebuild" onclick="rebuildIndex()">
+                &#x1F504; 重建向量索引
+            </button>
+            <div class="rebuild-status" id="rebuildStatus"></div>
+        </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2>&#9881; 模型配置</h2>
+            <button class="settings-close" onclick="closeSettings()">&#10005;</button>
+        </div>
+
+        <div class="settings-body">
+            <div class="settings-section">
+                <label>服务商</label>
+                <select id="cfgProvider" onchange="onProviderChange()">
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="qianwen">阿里百炼（通义千问）</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="tencent">腾讯混元</option>
+                    <option value="ollama">Ollama（本地）</option>
+                    <option value="custom">自定义</option>
+                </select>
+            </div>
+
+            <div class="settings-section">
+                <label>API 地址</label>
+                <input type="text" id="cfgBaseUrl" placeholder="https://api.deepseek.com/v1" />
+            </div>
+
+            <div class="settings-section">
+                <label>API Key</label>
+                <div class="key-wrapper">
+                    <input type="password" id="cfgApiKey" placeholder="sk-..." autocomplete="off" />
+                    <button class="key-eye" onclick="toggleKeyVisibility()" title="显示/隐藏">&#128065;</button>
+                </div>
+                <div class="hint">本地保存，不会上传到任何第三方</div>
+            </div>
+
+            <div class="settings-section">
+                <label>模型名称</label>
+                <div class="model-row">
+                    <select id="cfgModelPreset" onchange="onModelPresetChange()"></select>
+                    <input type="text" id="cfgModelName" placeholder="自定义模型名" style="display:none" />
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <label>温度（创造性）<span id="tempLabel" style="color:#667eea;font-weight:600;margin-left:6px">0.7</span></label>
+                <div class="slider-row">
+                    <span style="font-size:12px;color:#aaa">精确</span>
+                    <input type="range" id="cfgTemp" min="0" max="1" step="0.05" value="0.7"
+                           oninput="document.getElementById('tempLabel').textContent=this.value" />
+                    <span style="font-size:12px;color:#aaa">创意</span>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <label>最大输出 Token <span id="tokensLabel" style="color:#667eea;font-weight:600;margin-left:6px">2048</span></label>
+                <div class="slider-row">
+                    <span style="font-size:12px;color:#aaa">512</span>
+                    <input type="range" id="cfgMaxTokens" min="512" max="8192" step="256" value="2048"
+                           oninput="document.getElementById('tokensLabel').textContent=this.value" />
+                    <span style="font-size:12px;color:#aaa">8192</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-result" id="testResult"></div>
+
+        <div class="settings-footer">
+            <button class="btn-test" id="btnTest" onclick="testConnection()">&#128267; 测试连接</button>
+            <button class="btn-save" id="btnSave" onclick="saveConfig()">&#10003; 保存并应用</button>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="welcome-tips" id="welcomeTips">
+            <div class="welcome-icon">&#x1F52C;</div>
+            <h2>欢迎使用知识库问答系统</h2>
+            <div class="doc-info">已加载 <strong>256</strong> 个文档片段，您可以开始提问</div>
+            <div class="tips">
+                <span class="tip" onclick="askQuick('工业相机选型的三个最核心参数是什么？')">&#x1F4F7; 工业相机选型的三个最核心参数？</span>
+                <span class="tip" onclick="askQuick('镜头选型的核心计算方法有哪些？')">&#x1F50D; 镜头选型的核心计算方法</span>
+                <span class="tip" onclick="askQuick('光源选型的基本法则是什么？')">&#x1F4A1; 光源选型的基本法则</span>
+                <span class="tip" onclick="askQuick('如何阅读工业相机数据手册？')">&#x1F4D6; 如何阅读工业相机数据手册？</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span class="server-dot" id="serverDot"></span>
+        <span id="statusText">连接中...</span>
+    </div>
+
+    <div class="input-area">
+        <div class="input-wrapper">
+            <textarea id="queryInput" placeholder="输入您的问题，Shift+Enter 换行" rows="1"
+                onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+            <button id="sendBtn" onclick="sendMessage()" title="发送">&#10148;</button>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script>
+        // ===== 公式渲染 =====
+        function renderMath(container) {
+            try {
+                if (typeof renderMathInElement !== 'undefined') {
+                    renderMathInElement(container, {
+                        delimiters: [
+                            {left: '\\[', right: '\\]', display: true},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$',  right: '$',  display: false}
+                        ],
+                        throwOnError: false, strict: false
+                    });
+                }
+            } catch(e) { console.warn('KaTeX:', e.message); }
+        }
+
+        function safeHtml(text) {
+            var d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // ===== 服务器状态 =====
+        const serverDot  = document.getElementById('serverDot');
+        const statusText = document.getElementById('statusText');
+
+        function getApiBase() {
+            return window.location.protocol === 'file:' ? null : window.location.origin;
+        }
+        function setServerStatus(online) {
+            serverDot.className = 'server-dot ' + (online ? 'online' : 'offline');
+            if (!isProcessing) statusText.textContent = online ? '就绪' : '服务器离线';
+        }
+        function checkServer() {
+            var base = getApiBase();
+            if (!base) { serverDot.className = 'server-dot offline'; statusText.textContent = '请通过 Flask 服务器访问'; return; }
+            fetch(base + '/api/health').then(r => setServerStatus(r.ok)).catch(() => setServerStatus(false));
+        }
+        checkServer();
+        setInterval(checkServer, 30000);
+
+        // ===== DOM 引用 =====
+        const chatContainer = document.getElementById('chatContainer');
+        const queryInput    = document.getElementById('queryInput');
+        const sendBtn       = document.getElementById('sendBtn');
+        const welcomeTips   = document.getElementById('welcomeTips');
+        let isProcessing = false;
+
+        // ===== 对话历史（localStorage 持久化）=====
+        // 每个元素：{role: 'user'|'assistant', content: '纯文本'}
+        // 发给后端，后端转成 HumanMessage / AIMessage 插入 prompt
+        let chatHistory = [];
+
+        (function restoreHistory() {
+            try {
+                var saved = localStorage.getItem('chatHistory');
+                if (saved) chatHistory = JSON.parse(saved);
+            } catch(e) { chatHistory = []; }
+        })();
+
+        function saveHistory() {
+            try { localStorage.setItem('chatHistory', JSON.stringify(chatHistory)); } catch(e) {}
+        }
+
+        function newChat() {
+            if (isProcessing) return;
+            chatHistory = [];
+            try { localStorage.removeItem('chatHistory'); } catch(e) {}
+            chatContainer.innerHTML = '';
+            if (welcomeTips) {
+                welcomeTips.style.display = '';
+                chatContainer.appendChild(welcomeTips);
+            }
+            statusText.textContent = '新对话已开始';
+            queryInput.focus();
+        }
+
+        // ===== 错误分类 =====
+        function friendlyError(err) {
+            var msg = err.message || '';
+            if (err.name === 'AbortError')
+                return '请求超时（超过 90 秒），请稍后重试';
+            if (msg.includes('Failed to fetch') || msg.includes('Failed to parse URL') ||
+                msg.includes('NetworkError') || msg.includes('ERR_CONNECTION_REFUSED'))
+                return '无法连接到服务器，请确认已运行 python app.py 并刷新页面';
+            return '请求失败：' + (msg || '未知错误');
+        }
+
+        // ===== 参考资料 HTML 构建（复用） =====
+        function buildKbRefsHtml(refs) {
+            if (!refs || !refs.length) return '';
+            var h = '<div class="references"><details><summary>&#x1F4DA; 知识库参考 (' + refs.length + ' 条)</summary>';
+            refs.forEach(function(r) {
+                h += '<div class="ref-item"><div class="ref-title">参考 ' + r.index + ' | ' + safeHtml(r.source) + '</div>'
+                   + '<div class="ref-content markdown-body">' + (r.content_html || safeHtml(r.content)) + '</div></div>';
+            });
+            return h + '</details></div>';
+        }
+        function buildWebRefsHtml(refs) {
+            if (!refs || !refs.length) return '';
+            var h = '<div class="references web-refs"><details><summary>&#x1F310; 互联网搜索 (' + refs.length + ' 条)</summary>';
+            refs.forEach(function(r) {
+                h += '<div class="web-ref-item"><div class="ref-title"><a href="' + safeHtml(r.source) + '" target="_blank" rel="noopener">'
+                   + safeHtml(r.title || r.source) + '</a></div>'
+                   + '<div class="ref-content markdown-body">' + (r.content_html || safeHtml(r.content)) + '</div></div>';
+            });
+            return h + '</details></div>';
+        }
+
+        // ===== 消息气泡操作 =====
+        function addMessage(role, content, refs, contentHtml, webRefs) {
+            var div = document.createElement('div');
+            div.className = 'message ' + role;
+            if (role === 'user') {
+                div.innerHTML = '<div class="avatar">&#x1F464;</div>'
+                    + '<div class="bubble"><div class="markdown-body">' + safeHtml(content) + '</div></div>';
+            } else {
+                var bubble = '<div class="markdown-body">' + (contentHtml || safeHtml(content)) + '</div>'
+                           + buildKbRefsHtml(refs) + buildWebRefsHtml(webRefs);
+                div.innerHTML = '<div class="avatar">&#x1F916;</div><div class="bubble">' + bubble + '</div>';
+                renderMath(div);
+            }
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return div;
+        }
+
+        // 创建流式气泡（先显示打字动画）
+        function addStreamingBubble() {
+            var div = document.createElement('div');
+            div.className = 'message assistant';
+            div.innerHTML = '<div class="avatar">&#x1F916;</div>'
+                + '<div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return div;
+        }
+
+        // 流式过程中逐字更新（首次调用替换掉打字动画）
+        function updateStreamingBubble(msgDiv, text) {
+            var bubble = msgDiv.querySelector('.bubble');
+            var el = bubble.querySelector('.streaming-text');
+            if (!el) {
+                bubble.innerHTML = '<div class="markdown-body streaming-text"></div>';
+                el = bubble.querySelector('.streaming-text');
+            }
+            el.textContent = text;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 流式结束：替换为渲染好的 HTML + 参考资料
+        function finalizeStreamingBubble(msgDiv, answerHtml, refs, webRefs) {
+            var bubble = msgDiv.querySelector('.bubble');
+            bubble.innerHTML = '<div class="markdown-body">' + answerHtml + '</div>'
+                             + buildKbRefsHtml(refs) + buildWebRefsHtml(webRefs);
+            renderMath(msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // ===== 输入处理 =====
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+        }
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        }
+        function askQuick(text) { queryInput.value = text; sendMessage(); }
+
+        // ===== 发送消息（SSE 流式） =====
+        async function sendMessage() {
+            if (isProcessing) return;
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            const base = getApiBase();
+            if (!base) {
+                addMessage('assistant', '请通过 Flask 服务器访问（运行 python app.py 后访问 http://127.0.0.1:5000）');
+                return;
+            }
+
+            isProcessing = true;
+            sendBtn.disabled = true;
+            statusText.textContent = '检索中...';
+            if (welcomeTips) welcomeTips.style.display = 'none';
+            addMessage('user', query);
+            queryInput.value = '';
+            queryInput.style.height = 'auto';
+
+            const msgDiv = addStreamingBubble();
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 90000);
+
+            let refs = [], webRefs = [], streamedText = '';
+
+            try {
+                const res = await fetch(base + '/api/chat/stream', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query, history: chatHistory}),
+                    signal: controller.signal
+                });
+
+                if (!res.ok) {
+                    const e = await res.json().catch(() => ({error: res.statusText}));
+                    throw new Error(e.error || res.statusText);
+                }
+
+                statusText.textContent = '思考中...';
+                const reader  = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, {stream: true});
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();   // 最后一行可能不完整，留到下次
+
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const raw = line.slice(6).trim();
+                        if (raw === '[DONE]') { reader.cancel(); break; }
+
+                        let msg;
+                        try { msg = JSON.parse(raw); } catch { continue; }
+
+                        if (msg.type === 'status') {
+                            statusText.textContent = msg.content || '检索中...';
+
+                        } else if (msg.type === 'refs') {
+                            refs = msg.references || [];
+                            webRefs = msg.web_references || [];
+                            statusText.textContent = '思考中...';
+
+                        } else if (msg.type === 'token' && msg.content) {
+                            streamedText += msg.content;
+                            updateStreamingBubble(msgDiv, streamedText);
+
+                        } else if (msg.type === 'done') {
+                            finalizeStreamingBubble(msgDiv, msg.answer_html || safeHtml(streamedText), refs, webRefs);
+                            // 本轮问答写入历史并持久化到 localStorage
+                            chatHistory.push({role: 'user',      content: query});
+                            chatHistory.push({role: 'assistant', content: streamedText});
+                            saveHistory();
+
+                        } else if (msg.type === 'error') {
+                            finalizeStreamingBubble(msgDiv, '<p style="color:#ef4444">错误：' + safeHtml(msg.content) + '</p>', [], []);
+                        }
+                    }
+                }
+
+                setServerStatus(true);
+                statusText.textContent = '就绪';
+
+            } catch(err) {
+                msgDiv.remove();
+                addMessage('assistant', friendlyError(err));
+                setServerStatus(false);
+            } finally {
+                clearTimeout(timer);
+                isProcessing = false;
+                sendBtn.disabled = false;
+                queryInput.focus();
+            }
+        }
+
+        queryInput.focus();
+
+        // ===== 模型配置面板 =====
+        const PROVIDERS = {
+            deepseek: {
+                name: 'DeepSeek',
+                url:  'https://api.deepseek.com',
+                models: ['deepseek-v4-pro', 'deepseek-v4-flash', 'deepseek-chat', 'deepseek-reasoner']
+            },
+            qianwen: {
+                name: '阿里百炼',
+                url:  'https://dashscope.aliyuncs.com/compatible-mode/v1',
+                models: ['qwen-max-latest', 'qwen3-235b-a22b', 'qwen3-32b', 'deepseek-v3', 'deepseek-r1']
+            },
+            openai: {
+                name: 'OpenAI',
+                url:  'https://api.openai.com/v1',
+                models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo']
+            },
+            tencent: {
+                name: '腾讯混元',
+                url:  'https://api.hunyuan.cloud.tencent.com/v1',
+                models: ['hunyuan-turbos-latest', 'hunyuan-t1-latest', 'hunyuan-large-longcontext']
+            },
+            ollama: {
+                name: 'Ollama（本地）',
+                url:  'http://localhost:11434/v1',
+                models: ['qwen2.5:7b', 'llama3.1:8b', 'deepseek-r1:7b', 'gemma3:9b']
+            },
+            custom: {
+                name: '自定义',
+                url:  '',
+                models: []
+            }
+        };
+
+        const CUSTOM_OPT = '__custom__';
+
+        function openSettings() {
+            document.getElementById('settingsOverlay').classList.add('open');
+            document.getElementById('settingsPanel').classList.add('open');
+            document.getElementById('kbPanel').classList.remove('open');
+            loadCurrentConfig();
+        }
+        function closeSettings() {
+            document.getElementById('settingsOverlay').classList.remove('open');
+            document.getElementById('settingsPanel').classList.remove('open');
+            hideTestResult();
+        }
+
+        function loadCurrentConfig() {
+            var base = getApiBase();
+            if (!base) return;
+            fetch(base + '/api/config/llm')
+                .then(r => r.json())
+                .then(function(cfg) {
+                    document.getElementById('cfgProvider').value = cfg.provider || 'deepseek';
+                    document.getElementById('cfgBaseUrl').value  = cfg.base_url  || '';
+                    document.getElementById('cfgApiKey').value   = cfg.has_key ? (cfg.api_key || '') : '';
+                    document.getElementById('cfgTemp').value     = cfg.temperature ?? 0.7;
+                    document.getElementById('tempLabel').textContent   = cfg.temperature ?? 0.7;
+                    document.getElementById('cfgMaxTokens').value = cfg.max_tokens ?? 2048;
+                    document.getElementById('tokensLabel').textContent = cfg.max_tokens ?? 2048;
+                    rebuildModelPreset(cfg.provider || 'deepseek', cfg.model_name || '');
+                })
+                .catch(function() {
+                    onProviderChange();
+                });
+        }
+
+        function onProviderChange() {
+            var p = document.getElementById('cfgProvider').value;
+            var info = PROVIDERS[p] || PROVIDERS.custom;
+            if (info.url) document.getElementById('cfgBaseUrl').value = info.url;
+            rebuildModelPreset(p, '');
+        }
+
+        function rebuildModelPreset(provider, currentModel) {
+            var info = PROVIDERS[provider] || PROVIDERS.custom;
+            var sel  = document.getElementById('cfgModelPreset');
+            var inp  = document.getElementById('cfgModelName');
+
+            sel.innerHTML = '';
+            info.models.forEach(function(m) {
+                var opt = document.createElement('option');
+                opt.value = m; opt.textContent = m;
+                sel.appendChild(opt);
+            });
+            // 自定义选项
+            var customOpt = document.createElement('option');
+            customOpt.value = CUSTOM_OPT; customOpt.textContent = '自定义...';
+            sel.appendChild(customOpt);
+
+            // 匹配当前模型
+            var matched = info.models.includes(currentModel);
+            if (matched) {
+                sel.value = currentModel;
+                sel.style.display = ''; inp.style.display = 'none';
+            } else {
+                if (info.models.length === 0) {
+                    sel.style.display = 'none'; inp.style.display = '';
+                    inp.value = currentModel || '';
+                } else {
+                    if (currentModel) {
+                        sel.value = CUSTOM_OPT;
+                        sel.style.display = ''; inp.style.display = '';
+                        inp.value = currentModel;
+                    } else {
+                        sel.value = info.models[0] || CUSTOM_OPT;
+                        sel.style.display = ''; inp.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        function onModelPresetChange() {
+            var sel = document.getElementById('cfgModelPreset');
+            var inp = document.getElementById('cfgModelName');
+            if (sel.value === CUSTOM_OPT) {
+                inp.style.display = ''; inp.focus();
+            } else {
+                inp.style.display = 'none';
+            }
+        }
+
+        function getConfigForm() {
+            var sel = document.getElementById('cfgModelPreset');
+            var modelName = (sel.value === CUSTOM_OPT || sel.style.display === 'none')
+                ? document.getElementById('cfgModelName').value.trim()
+                : sel.value;
+            return {
+                provider:    document.getElementById('cfgProvider').value,
+                api_key:     document.getElementById('cfgApiKey').value.trim(),
+                base_url:    document.getElementById('cfgBaseUrl').value.trim(),
+                model_name:  modelName,
+                temperature: parseFloat(document.getElementById('cfgTemp').value),
+                max_tokens:  parseInt(document.getElementById('cfgMaxTokens').value)
+            };
+        }
+
+        function toggleKeyVisibility() {
+            var inp = document.getElementById('cfgApiKey');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        function showTestResult(ok, text) {
+            var el = document.getElementById('testResult');
+            el.className = 'test-result ' + (ok ? 'ok' : 'err');
+            el.textContent = text;
+            el.style.display = 'block';
+        }
+        function hideTestResult() {
+            document.getElementById('testResult').style.display = 'none';
+        }
+
+        function testConnection() {
+            var base = getApiBase(); if (!base) return;
+            var cfg  = getConfigForm();
+            if (!cfg.base_url || !cfg.model_name) {
+                showTestResult(false, '请填写 API 地址和模型名称'); return;
+            }
+            var btn = document.getElementById('btnTest');
+            btn.disabled = true; btn.textContent = '测试中...';
+            hideTestResult();
+
+            fetch(base + '/api/config/test', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(cfg)
+            })
+            .then(r => r.json())
+            .then(function(d) {
+                if (d.error) showTestResult(false, '连接失败：' + d.error);
+                else showTestResult(true, '✓ 连接成功！模型回复：' + d.reply);
+            })
+            .catch(function(e) { showTestResult(false, '请求失败：' + e.message); })
+            .finally(function() { btn.disabled = false; btn.textContent = '⚡ 测试连接'; });
+        }
+
+        // ===== 知识库管理面板 =====
+        function openKbPanel() {
+            document.getElementById('settingsOverlay').classList.add('open');
+            document.getElementById('kbPanel').classList.add('open');
+            document.getElementById('settingsPanel').classList.remove('open');
+            loadKbFiles();
+        }
+        function closeKbPanel() {
+            document.getElementById('settingsOverlay').classList.remove('open');
+            document.getElementById('kbPanel').classList.remove('open');
+        }
+        function closePanels() {
+            closeSettings();
+            closeKbPanel();
+        }
+
+        function fmtSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+            return (bytes/1048576).toFixed(1) + ' MB';
+        }
+        function fileIcon(name) {
+            var ext = name.split('.').pop().toLowerCase();
+            return {pdf:'📕', md:'📝', txt:'📄'}[ext] || '📄';
+        }
+
+        function loadKbFiles() {
+            var base = getApiBase(); if (!base) return;
+            fetch(base + '/api/kb/files')
+                .then(r => r.json())
+                .then(function(d) {
+                    var files = d.files || [];
+                    document.getElementById('kbStats').textContent =
+                        files.length + ' 个文件';
+
+                    var list = document.getElementById('fileList');
+                    if (!files.length) {
+                        list.innerHTML = '<div style="text-align:center;color:#ccc;padding:24px">暂无文档，请上传</div>';
+                        return;
+                    }
+                    list.innerHTML = files.map(function(f) {
+                        return '<div class="file-item">'
+                            + '<span class="file-icon">' + fileIcon(f.name) + '</span>'
+                            + '<div class="file-info">'
+                            + '<div class="file-name" title="' + safeHtml(f.path) + '">' + safeHtml(f.name) + '</div>'
+                            + '<div class="file-meta">' + fmtSize(f.size) + ' &nbsp;·&nbsp; ' + safeHtml(f.modified) + '</div>'
+                            + '</div>'
+                            + '<button class="file-del" onclick="deleteFile(\'' + encodeURIComponent(f.path) + '\',this)" title="删除">🗑</button>'
+                            + '</div>';
+                    }).join('');
+                })
+                .catch(function() {
+                    document.getElementById('kbStats').textContent = '加载失败';
+                });
+        }
+
+        function deleteFile(encodedPath, btn) {
+            var path = decodeURIComponent(encodedPath);
+            if (!confirm('确认删除：' + path + '\n\n删除后需重建索引才生效')) return;
+            var base = getApiBase(); if (!base) return;
+            btn.disabled = true;
+            fetch(base + '/api/kb/file/' + encodedPath, {method: 'DELETE'})
+                .then(r => r.json())
+                .then(function(d) {
+                    if (d.error) { alert('删除失败：' + d.error); btn.disabled = false; }
+                    else loadKbFiles();
+                })
+                .catch(function(e) { alert('请求失败：' + e.message); btn.disabled = false; });
+        }
+
+        function uploadFiles(files) {
+            if (!files || !files.length) return;
+            var base = getApiBase(); if (!base) return;
+            var zone = document.getElementById('uploadZone');
+            zone.textContent = '上传中...';
+
+            var uploads = Array.from(files).map(function(f) {
+                var fd = new FormData();
+                fd.append('file', f);
+                return fetch(base + '/api/kb/upload', {method: 'POST', body: fd})
+                    .then(r => r.json());
+            });
+
+            Promise.all(uploads).then(function(results) {
+                var errs = results.filter(r => r.error);
+                zone.innerHTML = '<div class="upload-icon">&#x1F4C2;</div>'
+                    + '<div>点击上传 或 拖拽文件到此处</div>'
+                    + '<div style="font-size:12px;margin-top:4px;color:#bbb">支持 .txt &nbsp;.md &nbsp;.pdf</div>'
+                    + '<input type="file" id="fileInput" multiple accept=".txt,.md,.pdf" onchange="uploadFiles(this.files)">';
+                if (errs.length) alert('部分文件上传失败：' + errs.map(e=>e.error).join('\n'));
+                loadKbFiles();
+                setRebuildHint();
+            }).catch(function(e) {
+                alert('上传失败：' + e.message);
+                zone.innerHTML = '<div class="upload-icon">&#x1F4C2;</div><div>点击上传 或 拖拽文件到此处</div>'
+                    + '<div style="font-size:12px;margin-top:4px;color:#bbb">支持 .txt &nbsp;.md &nbsp;.pdf</div>'
+                    + '<input type="file" id="fileInput" multiple accept=".txt,.md,.pdf" onchange="uploadFiles(this.files)">';
+            });
+        }
+
+        function onDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
+        function onDragLeave()  { document.getElementById('uploadZone').classList.remove('drag-over'); }
+        function onDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.remove('drag-over');
+            uploadFiles(e.dataTransfer.files);
+        }
+
+        function setRebuildHint() {
+            var el = document.getElementById('rebuildStatus');
+            el.className = 'rebuild-status run';
+            el.textContent = '文件已变更，建议重建索引';
+        }
+
+        var _rebuildPoll = null;
+        function rebuildIndex() {
+            var base = getApiBase(); if (!base) return;
+            var btn = document.getElementById('btnRebuild');
+            var st  = document.getElementById('rebuildStatus');
+            btn.disabled = true;
+            st.className = 'rebuild-status run';
+            st.textContent = '正在重建...';
+
+            fetch(base + '/api/kb/rebuild', {method: 'POST'})
+                .then(r => r.json())
+                .then(function(d) {
+                    if (d.status === 'already_running') {
+                        st.textContent = '已在重建中，请稍候';
+                    }
+                    _rebuildPoll = setInterval(pollRebuild, 2000);
+                })
+                .catch(function(e) {
+                    st.className = 'rebuild-status err';
+                    st.textContent = '启动失败：' + e.message;
+                    btn.disabled = false;
+                });
+        }
+
+        function pollRebuild() {
+            var base = getApiBase(); if (!base) return;
+            fetch(base + '/api/kb/rebuild/status')
+                .then(r => r.json())
+                .then(function(d) {
+                    var st  = document.getElementById('rebuildStatus');
+                    var btn = document.getElementById('btnRebuild');
+                    if (d.status === 'done') {
+                        clearInterval(_rebuildPoll);
+                        st.className = 'rebuild-status ok';
+                        st.textContent = '✓ ' + d.message;
+                        btn.disabled = false;
+                        loadKbFiles();
+                    } else if (d.status === 'error') {
+                        clearInterval(_rebuildPoll);
+                        st.className = 'rebuild-status err';
+                        st.textContent = '✗ ' + d.message;
+                        btn.disabled = false;
+                    } else {
+                        st.textContent = d.message || '重建中...';
+                    }
+                });
+        }
+
+        function saveConfig() {
+            var base = getApiBase(); if (!base) return;
+            var cfg  = getConfigForm();
+            if (!cfg.api_key && !cfg.base_url.includes('localhost')) {
+                showTestResult(false, '请输入 API Key'); return;
+            }
+            if (!cfg.base_url || !cfg.model_name) {
+                showTestResult(false, '请填写 API 地址和模型名称'); return;
+            }
+            var btn = document.getElementById('btnSave');
+            btn.disabled = true; btn.textContent = '保存中...';
+
+            fetch(base + '/api/config/llm', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(cfg)
+            })
+            .then(r => r.json())
+            .then(function(d) {
+                if (d.error) { showTestResult(false, '保存失败：' + d.error); }
+                else {
+                    showTestResult(true, '✓ 已切换到 ' + d.model + '，新对话立即生效');
+                    // 更新页面副标题
+                    var sub = document.querySelector('.header .subtitle');
+                    if (sub) sub.textContent = '当前模型：' + d.model;
+                }
+            })
+            .catch(function(e) { showTestResult(false, '请求失败：' + e.message); })
+            .finally(function() { btn.disabled = false; btn.textContent = '✓ 保存并应用'; });
+        }
+    </script>
+</body>
+</html>
