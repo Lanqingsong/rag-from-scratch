@@ -22,8 +22,9 @@ pdfminer.six>=20221105
 # Word 文档解析
 python-docx>=1.1.0
 
-# Markdown 渲染
+# Markdown 渲染（Pygments 用于 codehilite 代码高亮）
 markdown>=3.6
+Pygments>=2.0
 
 # 混合检索（BM25）
 rank-bm25>=0.2.2

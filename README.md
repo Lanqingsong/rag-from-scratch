@@ -475,6 +475,8 @@ python app.py        # 就这三步
 
 ---
 
+## 常见问题
+
 **Q: 启动报 `DEEPSEEK_API_KEY 未设置`**  
 确认项目根目录有 `.env` 文件，内容为 `DEEPSEEK_API_KEY=sk-xxx`。
 
