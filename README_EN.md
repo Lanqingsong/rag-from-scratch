@@ -499,9 +499,23 @@ Replace documents in `knowledge_base/` → edit `system.txt` role definition →
 
 ---
 
+## About the Author
+
+Hi, I'm **lanqingsong**, a developer passionate about AI engineering.
+
+This project grew out of my hands-on journey learning RAG — reading papers and source code, hitting dead ends, and turning the lessons learned into documented, runnable code. The goal is to spare the next person from walking the same path.
+
+If you're working on something similar, let's talk. If you find this project useful, a Star or PR is always welcome.
+
+**Contact:**
+- 📧 Collaboration → [lanqingsong8749@outlook.com](mailto:lanqingsong8749@outlook.com) · [874953727@qq.com](mailto:874953727@qq.com)
+- 🐛 Bug reports / Feature requests → [Open an Issue](../../issues)
+
+---
+
 ## AI Collaboration Statement
 
-This project was co-developed by [lanqingsong874953727@outlook.com](mailto:lanqingsong874953727@outlook.com) and an AI assistant.
+This project was co-developed by [lanqingsong8749@outlook.com](mailto:lanqingsong8749@outlook.com) and an AI assistant.
 
 ---
 

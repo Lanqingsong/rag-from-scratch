@@ -201,6 +201,16 @@ docker restart searxng
 
 ---
 
+## 关于作者
+
+大家好，我是 **lanqingsong**，一名热衷于 AI 工程实践的开发者。
+
+这个项目诞生于我系统学习 RAG 技术的过程中——一边啃论文和源码，一边把踩过的坑和总结的最佳实践沉淀成文档和可运行代码。目标是让下一个入门 RAG 的人不必走一样的弯路。
+
+如果你也在做类似的事情，欢迎互相交流；如果你觉得这个项目有价值，欢迎 Star 或贡献 PR。
+
+---
+
 ## 开源协议
 
 [MIT License](LICENSE)
@@ -215,7 +225,7 @@ docker restart searxng
 
 - 🐛 **发现 Bug / 有功能建议** → [提交 Issue](../../issues)，描述越详细越好
 - 💬 **技术讨论 / 使用问题** → 直接在 Issue 里提问，我会尽量回复
-- 📧 **其他合作** → [lanqingsong874953727@outlook.com](mailto:lanqingsong874953727@outlook.com)
+- 📧 **其他合作** → [lanqingsong8749@outlook.com](mailto:lanqingsong8749@outlook.com) · [874953727@qq.com](mailto:874953727@qq.com)
 
 不管是初学者的入门困惑，还是高手的架构建议，都欢迎来聊。能帮到你就是最好的回报。
 
