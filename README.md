@@ -10,7 +10,6 @@
 [![LangChain](https://img.shields.io/badge/LangChain-0.3+-1c3c5e)](https://langchain.com)
 [![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Built with Claude](https://img.shields.io/badge/Built%20with-Claude%20AI-a855f7?logo=anthropic&logoColor=white)](https://anthropic.com)
 
 </div>
 
@@ -202,13 +201,23 @@ docker restart searxng
 
 ---
 
-## AI 协作声明
-
-本项目由 [lanqingsong874953727@outlook.com](mailto:lanqingsong874953727@outlook.com) 与 AI 助手协作开发。
-
 ## 开源协议
 
 [MIT License](LICENSE)
+
+---
+
+## 欢迎交流 🙌
+
+这个项目是我在学习和实践 RAG 过程中沉淀下来的，如果你在使用中遇到任何问题、有改进建议，或者想一起探讨 RAG 相关技术，都非常欢迎！
+
+**几种联系方式：**
+
+- 🐛 **发现 Bug / 有功能建议** → [提交 Issue](../../issues)，描述越详细越好
+- 💬 **技术讨论 / 使用问题** → 直接在 Issue 里提问，我会尽量回复
+- 📧 **其他合作** → [lanqingsong874953727@outlook.com](mailto:lanqingsong874953727@outlook.com)
+
+不管是初学者的入门困惑，还是高手的架构建议，都欢迎来聊。能帮到你就是最好的回报。
 
 ---
 
@@ -216,6 +225,6 @@ docker restart searxng
 
 如果本项目对你有帮助，欢迎点个 ⭐
 
-[教学文档](lessons/README.md) · [提交 Issue](../../issues)
+[教学文档](lessons/README.md) · [提交 Issue](../../issues) · [发起讨论](../../discussions)
 
 </div>
